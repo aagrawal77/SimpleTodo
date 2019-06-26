@@ -1,5 +1,6 @@
 package com.example.simpletodo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.apache.commons.io.FileUtils;
@@ -19,6 +21,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+
+    public final static int EDIT_REQUEST_CODE = 20;
+    public final static String ITEM_TEXT = "itemText";
+    public final static String ITEM_POSITION = "itemPosition";
 
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
@@ -66,6 +72,30 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent in = new Intent(MainActivity.this, EditItemActivity.class);
+                in.putExtra(ITEM_TEXT, items.get(i));
+                in.putExtra(ITEM_POSITION, i);
+                startActivityForResult(in, EDIT_REQUEST_CODE);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == EDIT_REQUEST_CODE) {
+            String updated = data.getExtras().getString(ITEM_TEXT);
+            int position = data.getExtras().getInt(ITEM_POSITION);
+            items.set(position, updated);
+            itemsAdapter.notifyDataSetChanged();
+            writeItems();
+            Toast.makeText(this, "Item updated successfully", Toast.LENGTH_SHORT);
+        }
     }
 
     private File getDataFile() {
